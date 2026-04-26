@@ -1,5 +1,10 @@
 ## Codeplug editor for the MD380/MD390/MD40 DMR Radios
 
+> **macOS users:** download the pre-built app from
+> [Releases](https://github.com/campbell-r-e/editcp/releases) or see
+> [MACOS_BUILD.md](MACOS_BUILD.md) for build instructions.
+> This fork adds native macOS support; the upstream project ships Linux only.
+
 ## Introduction
 This program is similar in purpose to the [MD380 CPS program](
 http://www.tyt888.com/?mod=download) provided by TYT Electronics
