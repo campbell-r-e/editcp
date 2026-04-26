@@ -66,12 +66,45 @@ deploy/win64/editcp64.exe: $(SOURCES)
 	mkdir -p deploy/win64
 	cp deploy/windows/editcp.exe deploy/win64/editcp64.exe
 
+QT5_DIR    = /usr/local/opt/qt@5
+FAKE_XCODE = $(HOME)/Library/FakeXcode.app
+GOBIN      = $(HOME)/go/bin
+
 macOS: clean darwin
-darwin: FORCE
-	@echo "Under macOS/darwin, it is ok to ignore the sed warnings about extra characters"
+
+.PHONY: setup-macos-sdk
+setup-macos-sdk:
+	@SDK_PATH=$$(xcrun --show-sdk-path 2>/dev/null); \
+	SDK_VER=$$(xcrun --show-sdk-version 2>/dev/null); \
+	mkdir -p "$(FAKE_XCODE)/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs"; \
+	rm -f "$(FAKE_XCODE)/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$$SDK_VER.sdk"; \
+	ln -s "$$SDK_PATH" "$(FAKE_XCODE)/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$$SDK_VER.sdk"; \
+	echo "macOS SDK: MacOSX$$SDK_VER"
+
+darwin: setup-macos-sdk FORCE
 	go mod tidy
 	go mod vendor
+	@mkdir -p vendor/github.com/therecipe/qt/internal/binding/files/docs
+	@cp -r $(shell go env GOPATH)/src/github.com/therecipe/qt/internal/binding/files/docs/5.13.0 \
+		vendor/github.com/therecipe/qt/internal/binding/files/docs/
+	@cp patches/github.com/dalefarnsworth-dmr/stdfu/stdfu_unix.go \
+		vendor/github.com/dalefarnsworth-dmr/stdfu/stdfu_unix.go
+	PATH="$(QT5_DIR)/bin:$(GOBIN):$$PATH" \
+	QT_DIR="$(QT5_DIR)" \
+	QT_VERSION=$$($(QT5_DIR)/bin/qmake -query QT_VERSION) \
+	QT_API=5.13.0 \
+	XCODE_DIR="$(FAKE_XCODE)" \
+	QT_NOT_CACHED=true \
 	qtdeploy build desktop
+
+.PHONY: open
+open: deploy/darwin/editcp.app
+	open deploy/darwin/editcp.app
+
+.PHONY: install-macos
+install-macos: deploy/darwin/editcp.app
+	cp -r deploy/darwin/editcp.app /Applications/editcp.app
+	@echo "Installed to /Applications/editcp.app"
 
 docker_usb_windows:
 	docker rmi -f therecipe/qt:windows_32_static >/dev/null 2>&1

@@ -274,13 +274,6 @@ func (edt *editor) addRadioMenu(menu *ui.Menu) {
 	menu = mb.AddMenu("Radio")
 
 	menu.AddAction("Read codeplug from radio", func() {
-		err := codeplug.RadioExists()
-		if err != nil {
-			title := "Read codeplug from radio failed"
-			ui.ErrorPopup(title, err.Error())
-			return
-		}
-
 		edt := newEditor(edt.app, codeplug.FileTypeNew, "")
 		if edt == nil || edt.codeplug == nil {
 			return
@@ -295,7 +288,7 @@ func (edt *editor) addRadioMenu(menu *ui.Menu) {
 		msgIndex := 0
 		pd := ui.NewProgressDialog(msgs[msgIndex])
 		pd.SetRange(codeplug.MinProgress, codeplug.MaxProgress)
-		err = cp.ReadRadio(func(cur int) error {
+		err := cp.ReadRadio(func(cur int) error {
 			if cur == codeplug.MinProgress {
 				pd.SetLabelText(msgs[msgIndex])
 				msgIndex++
@@ -312,6 +305,7 @@ func (edt *editor) addRadioMenu(menu *ui.Menu) {
 			title := "Read codeplug from radio failed"
 			ui.ErrorPopup(title, err.Error())
 			edt.FreeCodeplug()
+			return
 		}
 
 		if !cp.Valid() {
